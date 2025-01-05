@@ -1,5 +1,35 @@
-# STEP 1 : Load necessary libraries
+---
+title: "Livestock Growth Modelling Analysis"
+author: "Yusuf Omotosho"
+date: "2024-05-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## Project Overview ##
+
+This project was conducted for the Department of Animal Breeding & Genetics at the University of Ibadan. The study focused on modeling livestock growth performance using non-linear regression models to analyze growth patterns of Holstein Friesian and F1 crossbred cattle. The analysis provided insights for improved livestock management.
+
+**Objectives:**
+
+- Assess growth performance using non-linear regression models.
+-	Estimate model parameters and compare growth patterns.
+-	Provide data-driven recommendations for livestock management.
+
+**Tools & Libraries Used**
+
+-	R Packages: nls, minpack.lm, ggplot2, dplyr, readxl
+-	Software: R, Excel
+-	Statistical Methods: AIC, BIC, R-squared
+
+
+## Load necessary libraries ##
+
+```{r}
+# Step 1 : Install necessary packages
 # Install the minpack.lm package if it's not already installed
 if (!requireNamespace("minpack.lm", quietly = TRUE)) {
     install.packages("minpack.lm")  # Install the package
@@ -9,8 +39,9 @@ install.packages("tidyverse")
 install.packages("readxl")
 ```
 
+
+```{r}
 # STEP 2 : Load necessary libraries
-```
 library(nlme)
 library(minpack.lm)  # Now this should work without error
 library(ggplot2)
@@ -19,24 +50,30 @@ library(readxl)
 library(tidyr)
 ```
 
-# Task 1: Data Preparation
+## Data and Methodology ##
+
+**1. Data Source and Structure :**
+
+The dataset used for this analysis was imported from an Excel file (Org_Dataset.xlsx) containing observations on cattle growth. Key variables include:
+-	'Age_Months': Age of the cattle in months.
+-	'Weight_Kg': Weight of the cattle in kilograms.
+-	'Breed_Group': Classification into Holstein Friesian or F1 crossbred.
+
+```{r}
 # Load dataset
-cattle_data <- read_excel("Documents/Org_Dataset.xlsx") 
+cattle_data <- read_excel("Documents/Org_Dataset.xlsx")
 
 # View the imported data
 head(cattle_data) 
 
-
 # Inspect data structure
 str(cattle_data)
+```
 
-    tibble [80 C 4] (S3: tbl_df/tbl/data.frame)
-     $ ID         : num [1:80] 1 2 3 4 5 6 7 8 9 10 ...
-     $ Age_Months : num [1:80] 5.5 6 6.5 7 7.5 8 8.5 9 9.5 10 ...
-     $ Breed_Group: chr [1:80] "HYBRID" "HYBRID" "HYBRID" "HYBRID" ...
-     $ Weight_Kg  : num [1:80] 93.7 95.1 100 109.3 110.3 ...
-    
+**2. Data Cleaning and Preprocessing**
 
+```{r}
+# Step 2 : Check for non-finite values
 cattle_data <- cattle_data %>%
   filter(is.finite(Age_Months) & is.finite(Weight_Kg) & !is.na(Age_Months) & !is.na(Weight_Kg))
 
@@ -54,16 +91,34 @@ if (nrow(non_finite_rows) > 0) {
   message("No non-finite values detected.")
 }
 
-    No non-finite values detected.
-    
-    
-# Task 2: Model Fitting
+```
+
+##Growth Curve Modeling##
+
+**Theoretical Basis and Equations**
+1. 'Brody Model': Y(t)=A(1-B.e^-kt)
+2. 'Von Bertalanffy Model': Y(t)= A(1-B.e^(-kt))^3
+3. 'Logistic Model': Y(t) = A/(1+B.e^-kt)
+
+**Where:**
+- 'Y(t)' is the population mean at time t.
+- 'A' is the asymptotic weight or maximum value.
+- 'B' is the proportion of asymptotic weight to be gained after birth.
+- 'k' is the maturity rate.
+- 't' is time.
+
+**1. Model Fitting**
+
+```{r}
 # Define growth model equations
 brody_model <- function(Age_Months, A, B, k) A * (1 - B * exp(-k * Age_Months))
 vonB_model <- function(Age_Months, A, B, k) A * (1 - exp(-k * Age_Months))^B
 log_model <- function(Age_Months, A, B, k) A / (1 + B * exp(-k * Age_Months))
 ```
 
+**2. Fit models by Breed Type**
+
+```{r}
 # Fit models for each group
 fit_model <- function(model_func, data) {
   nlsLM(Weight_Kg ~ model_func(Age_Months, A, B, k), 
@@ -81,9 +136,11 @@ fits <- cattle_data %>%
     log = list(fit_model(log_model, pick(everything())))
   )
 print(fits)
+```
 
 
-# Task 3: Parameter Estimation
+**Task 3: Parameter Estimation**
+
 extract_params <- function(model) {
   summary(model)$coefficients
 }

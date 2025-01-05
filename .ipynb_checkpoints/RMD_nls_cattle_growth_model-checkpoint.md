@@ -1,4 +1,19 @@
-# Load necessary libraries
+Livestock Growth Modelling Analysis
+
+Project Overview
+This project was conducted for the Department of Animal Breeding & Genetics at the University of Ibadan. The study focused on modeling livestock growth performance using non-linear regression models to analyze growth patterns of Holstein Friesian and F1 crossbred cattle. The analysis provided insights for improved livestock management.
+Objectives:
+•	Assess growth performance using non-linear regression models.
+•	Estimate model parameters and compare growth patterns.
+•	Provide data-driven recommendations for livestock management.
+Tools & Libraries Used
+•	R Packages: nls, minpack.lm, ggplot2, dplyr, readxl
+•	Software: R, Excel
+•	Statistical Methods: AIC, BIC, R-squared
+
+
+# STEP 1 : Load necessary libraries
+```
 # Install the minpack.lm package if it's not already installed
 if (!requireNamespace("minpack.lm", quietly = TRUE)) {
     install.packages("minpack.lm")  # Install the package
@@ -6,14 +21,17 @@ if (!requireNamespace("minpack.lm", quietly = TRUE)) {
 }
 install.packages("tidyverse")
 install.packages("readxl")
+```
 
-# Load necessary libraries
+# STEP 2 : Load necessary libraries
+```
 library(nlme)
 library(minpack.lm)  # Now this should work without error
 library(ggplot2)
 library(dplyr)
 library(readxl)
 library(tidyr)
+```
 
 # Task 1: Data Preparation
 # Load dataset
