@@ -26,7 +26,7 @@ This project was conducted for the Department of Animal Breeding & Genetics at t
 -	Statistical Methods: AIC, BIC, R-squared
 
 
-## Load necessary libraries ##
+### Load necessary libraries ###
 
 ```{r}
 # Set CRAN mirror
@@ -53,7 +53,7 @@ library(readxl)
 library(tidyr)
 ```
 
-## Data and Methodology ##
+### Data and Methodology ###
 
 **1. Data Source and Structure :**
 
@@ -123,14 +123,16 @@ cat("Outliers Detected (Age):\n")
 print(outliers_age)
 ```
 
-## Growth Curve Modeling ##
+### Growth Curve Modeling ###
 
 **Theoretical Basis and Equations**
--1. 'Brody Model': Y(t)=A(1-B.e^-kt)
--2. 'Von Bertalanffy Model': Y(t)= A(1-B.e^(-kt))^3
--3. 'Logistic Model': Y(t) = A/(1+B.e^-kt)
+
+1. 'Brody Model': Y(t)=A(1-B.e^(-kt))
+2. 'Von Bertalanffy Model': Y(t)= A(1-B.e^(-kt))3
+3. 'Logistic Model': Y(t) = A/(1+B.e^(-kt))
 
 **Where:**
+
 - 'Y(t)' is the population mean at time t.
 - 'A' is the asymptotic weight or maximum value.
 - 'B' is the proportion of asymptotic weight to be gained after birth.
@@ -186,7 +188,7 @@ print(params)
 ```
 
 
-## Model Comparison ##
+### Model Comparison ###
 
 **Assessment Criteria**
 - 'AIC (Akaike Information Criterion)
@@ -304,7 +306,7 @@ print(convergence_results)
 ```
 
 
-## Visualization ##
+### Visualization ###
 
 ```{r}
 plot_growth <- function(model_func, model, data, title) {
@@ -341,7 +343,8 @@ plots <- fits %>%
 ```
 
 
-## Output plots ##
+### Output plots ###
+
 ```{r}
 for (plot_data in plots$brody_plot) print(plot_data)
 for (plot_data in plots$vonB_plot) print(plot_data)
@@ -349,7 +352,8 @@ for (plot_data in plots$log_plot) print(plot_data)
 ```
 
 
-# Task 6: Interpretation
+### Task 6: Interpretation ###
+
 ```{r}
 # Compare parameters and visualize outputs
 print("Parameter Estimates:")
