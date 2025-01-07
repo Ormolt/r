@@ -389,20 +389,25 @@ if (!requireNamespace(&quot;minpack.lm&quot;, quietly = TRUE)) {
     install.packages(&quot;tidyverse&quot;)
 }
 install.packages(&quot;tidyverse&quot;)</code></pre>
-<pre><code>## package &#39;tidyverse&#39; successfully unpacked and MD5 sums checked
+<pre><code>## Warning: unable to access index for repository https://cloud.r-project.org/src/contrib:
+##   cannot open URL &#39;https://cloud.r-project.org/src/contrib/PACKAGES&#39;</code></pre>
+<pre><code>## Warning: package &#39;tidyverse&#39; is not available for this version of R
 ## 
-## The downloaded binary packages are in
-##  C:\Users\Yusuf Omotosho\AppData\Local\Temp\RtmpGA83hi\downloaded_packages</code></pre>
+## A version of this package for your version of R might be available elsewhere,
+## see the ideas at
+## https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages</code></pre>
+<pre><code>## Warning: unable to access index for repository https://cloud.r-project.org/bin/windows/contrib/4.4:
+##   cannot open URL &#39;https://cloud.r-project.org/bin/windows/contrib/4.4/PACKAGES&#39;</code></pre>
 <pre class="r"><code>install.packages(&quot;readxl&quot;)</code></pre>
-<pre><code>## package &#39;readxl&#39; successfully unpacked and MD5 sums checked</code></pre>
-<pre><code>## Warning: cannot remove prior installation of package &#39;readxl&#39;</code></pre>
-<pre><code>## Warning in file.copy(savedcopy, lib, recursive = TRUE): problem copying D:\R
-## LANG\R-4.4.2\library\00LOCK\readxl\libs\x64\readxl.dll to D:\R
-## LANG\R-4.4.2\library\readxl\libs\x64\readxl.dll: Permission denied</code></pre>
-<pre><code>## Warning: restored &#39;readxl&#39;</code></pre>
-<pre><code>## 
-## The downloaded binary packages are in
-##  C:\Users\Yusuf Omotosho\AppData\Local\Temp\RtmpGA83hi\downloaded_packages</code></pre>
+<pre><code>## Warning: unable to access index for repository https://cloud.r-project.org/src/contrib:
+##   cannot open URL &#39;https://cloud.r-project.org/src/contrib/PACKAGES&#39;</code></pre>
+<pre><code>## Warning: package &#39;readxl&#39; is not available for this version of R
+## 
+## A version of this package for your version of R might be available elsewhere,
+## see the ideas at
+## https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages</code></pre>
+<pre><code>## Warning: unable to access index for repository https://cloud.r-project.org/bin/windows/contrib/4.4:
+##   cannot open URL &#39;https://cloud.r-project.org/bin/windows/contrib/4.4/PACKAGES&#39;</code></pre>
 <pre class="r"><code># STEP 2 : Load necessary libraries
 library(nlme)
 library(minpack.lm)  # Now this should work without error
@@ -511,14 +516,19 @@ cat(&quot;Outliers Detected (Age):\n&quot;)</code></pre>
 <h3>Growth Curve Modeling</h3>
 <p><strong>Theoretical Basis and Equations</strong></p>
 <ol style="list-style-type: decimal">
-<li>‘Brody Model’: Y(t)=A(1-B.e^-kt)</li>
-<li>‘Von Bertalanffy Model’: Y(t)= A(1-B.e<sup>(-kt))</sup>3</li>
-<li>‘Logistic Model’: Y(t) = A/(1+B.e^-kt)</li>
+<li>‘Brody Model’: Y(t)=A(1-B.e^(-kt))</li>
+<li>‘Von Bertalanffy Model’: Y(t)= A(1-B.e^(-kt))3</li>
+<li>‘Logistic Model’: Y(t) = A/(1+B.e^(-kt))</li>
 </ol>
-<p><strong>Where:</strong> - ‘Y(t)’ is the population mean at time t. -
-‘A’ is the asymptotic weight or maximum value. - ‘B’ is the proportion
-of asymptotic weight to be gained after birth. - ‘k’ is the maturity
-rate. - ‘t’ is time.</p>
+<p><strong>Where:</strong></p>
+<ul>
+<li>‘Y(t)’ is the population mean at time t.</li>
+<li>‘A’ is the asymptotic weight or maximum value.</li>
+<li>‘B’ is the proportion of asymptotic weight to be gained after
+birth.</li>
+<li>‘k’ is the maturity rate.</li>
+<li>‘t’ is time.</li>
+</ul>
 <p><strong>1. Model Fitting</strong></p>
 <pre class="r"><code># Define growth model equations
 brody_model &lt;- function(Age_Months, A, B, k) A * (1 - B * exp(-k * Age_Months))
