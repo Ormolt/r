@@ -25,28 +25,22 @@ This project was conducted for the Department of Animal Breeding & Genetics at t
 -	Software: R, Excel
 -	Statistical Methods: AIC, BIC, R-squared
 
-
-### Load necessary libraries ###
-
 ```{r}
 # Set CRAN mirror
 options(repos = c(CRAN = "https://cloud.r-project.org/"))
-
-# Step 1 : Install necessary packages
-# Install the minpack.lm package if it's not already installed
-if (!requireNamespace("minpack.lm", quietly = TRUE)) {
-    install.packages("minpack.lm")  # Install the package
-    install.packages("tidyverse")
-}
-install.packages("tidyverse")
-install.packages("readxl")
 ```
 
+### Install and Load Packages ###
+
+```{r}
+# Step 1 : Install necessary packages
+install.packages(c("minpack.lm", "tidyverse", "readxl"))
+```
 
 ```{r}
 # STEP 2 : Load necessary libraries
 library(nlme)
-library(minpack.lm)  # Now this should work without error
+library(minpack.lm)
 library(ggplot2)
 library(dplyr)
 library(readxl)
@@ -73,13 +67,9 @@ head(cattle_data)
 str(cattle_data)
 ```
 
-**2. Data Cleaning and Preprocessing**
+**2. Data Quality Checks**
 
 ```{r}
-# Check for non-finite values
-cattle_data <- cattle_data %>%
-  filter(is.finite(Age_Months) & is.finite(Weight_Kg) & !is.na(Age_Months) & !is.na(Weight_Kg))
-
 # Display any rows with non-finite values for diagnostic purposes
 non_finite_rows <- cattle_data %>%
   filter(
@@ -94,11 +84,6 @@ if (nrow(non_finite_rows) > 0) {
   message("No non-finite values detected.")
 }
 
-```
-
-**3. Data Quality Checks**
-
-```{r}
 # Check for missing values
 cat("Missing Values:\n")
 print(colSums(is.na(cattle_data)))
@@ -107,20 +92,24 @@ print(colSums(is.na(cattle_data)))
 cat("Duplicate Rows:\n")
 print(nrow(cattle_data) - nrow(distinct(cattle_data)))
 
-# Summary statistics for each variable
-cat("Summary Statistics:\n")
-print(summary(cattle_data))
-
 # Check for outliers using Z-score method
-z_scores <- scale(cattle_data$Weight_Kg)
-outliers <- which(abs(z_scores) > 3)
+z_scores_Weight <- scale(cattle_data$Weight_Kg)
+outliers_Weight <- which(abs(z_scores_Weight) > 3)
 cat("Outliers Detected (Weight):\n")
-print(outliers)
+print(outliers_Weight)
 
 z_scores_age <- scale(cattle_data$Age_Months)
 outliers_age <- which(abs(z_scores_age) > 3)
 cat("Outliers Detected (Age):\n")
 print(outliers_age)
+```
+
+**3. Statistical Summary of Dataset**
+
+```{r}
+# Summary statistics for each variable
+cat("Summary Statistics:\n")
+print(summary(cattle_data))
 ```
 
 ### Growth Curve Modeling ###
@@ -177,6 +166,7 @@ print(fits)
 extract_params <- function(model) {
   summary(model)$coefficients
 }
+
 params <- fits %>% 
   mutate(
     brody_params = lapply(brody, extract_params),
@@ -184,7 +174,21 @@ params <- fits %>%
     log_params = lapply(log, extract_params)
   )
 
-print(params)
+params_upd <- as.data.frame(lapply(params, function(x) {
+  gsub("[^[:print:]]", "", x)
+}))
+
+# Extract only the required parameter columns
+params_selected <- params_upd %>%
+  select(brody_params, vonB_params, log_params) %>%     # Keep only parameter columns
+  mutate(
+    brody_params = sapply(brody_params, paste, collapse = ", "),  # Convert lists to strings
+    vonB_params  = sapply(vonB_params, paste, collapse = ", "),  
+    log_params   = sapply(log_params, paste, collapse = ", ")   
+  )
+
+# Print the filtered and formatted results
+print(params_selected)
 ```
 
 
@@ -220,14 +224,20 @@ compare_models <- function(model) {
   return(c(AIC = AIC_val, BIC = BIC_val, R2 = R2_val))
 }
 
+# Extract metrics for each model and ensure numeric values are displayed
 model_metrics <- fits %>% 
   rowwise() %>% 
   mutate(
-    brody_metrics = list(compare_models(brody)),
-    vonB_metrics = list(compare_models(vonB)),
-    log_metrics = list(compare_models(log))
-  )
+    brody_metrics = list(as.numeric(compare_models(brody))),  # Convert to numeric vector
+    vonB_metrics  = list(as.numeric(compare_models(vonB))),
+    log_metrics   = list(as.numeric(compare_models(log)))
+  ) %>%
+  unnest_wider(brody_metrics, names_sep = "_") %>%  # Flatten metrics into separate columns
+  unnest_wider(vonB_metrics, names_sep = "_") %>%
+  unnest_wider(log_metrics, names_sep = "_") %>%
+  ungroup()
 
+# Print the cleaned-up metrics
 print(model_metrics)
 ```
 
@@ -235,73 +245,60 @@ print(model_metrics)
 **2. Check for Non-convergence**
 
 ```{r}
-# Function to check convergence and extract details
+# Function to check convergence
 check_convergence <- function(model) {
-  # Check if the model is NULL
-  if (is.null(model)) {
-    return(list(Status = "Error: Model is NULL"))
-  }
+  if (is.null(model)) return(data.frame(Status = "Error: Model is NULL"))
   
-  # Extract convergence info if available
   conv_info <- tryCatch(model$convInfo, error = function(e) NULL)
+  if (is.null(conv_info)) return(data.frame(Status = "Error: No convergence info"))
   
-  # Handle missing convergence info
-  if (is.null(conv_info)) {
-    return(list(Status = "Error: No convergence info available"))
-  }
-  
-  # Retrieve convergence details
-  is_conv <- conv_info$isConv
-  iterations <- conv_info$finIter
-  tolerance <- conv_info$finTol
-  stop_code <- conv_info$stopCode
-  stop_message <- conv_info$stopMessage
-  
-  # Calculate RB2 if residuals and fitted values are available
   residuals <- tryCatch(residuals(model), error = function(e) NA)
   fitted <- tryCatch(fitted(model), error = function(e) NA)
+  actuals <- fitted + residuals
   
-  if (!anyNA(residuals) && !anyNA(fitted)) {
-    actuals <- fitted + residuals
-    R2 <- 1 - sum(residuals^2) / sum((actuals - mean(actuals))^2)
+  # Calculate R2 if residuals and fitted values are valid
+  R2 <- if (!anyNA(residuals) && !anyNA(fitted)) {
+    1 - sum(residuals^2) / sum((actuals - mean(actuals))^2)
   } else {
-    R2 <- NA
+    NA
   }
-
-  # Build output report
-  result <- list(
-    Status = if (is_conv) "Converged" else "Not Converged",
-    Iterations = iterations,
-    Tolerance = tolerance,
-    StopCode = stop_code,
-    StopMessage = stop_message,
+  
+  # Return details as a data frame
+  data.frame(
+    Status = if (conv_info$isConv) "Converged" else "Not Converged",
+    Iterations = conv_info$finIter,
+    Tolerance = conv_info$finTol,
+    StopCode = conv_info$stopCode,
+    StopMessage = conv_info$stopMessage,
     R2 = R2
   )
-  return(result)
 }
 
-# Function to extract model details
-extract_model_details <- function(model) {
-  details <- list(
-    Coefficients = tryCatch(as.list(coef(model)), error = function(e) NA),
-    Residuals = tryCatch(residuals(model), error = function(e) NA),
-    Fitted = tryCatch(fitted(model), error = function(e) NA)
-  )
-  return(details)
+# Extract coefficients
+extract_coefficients <- function(model) {
+  tryCatch(as.numeric(coef(model)), error = function(e) NA)
 }
 
-# Apply convergence checks and extract details for each model
+# Apply convergence checks and extract details
 convergence_results <- fits %>%
+  rowwise() %>%
   mutate(
-    brody_check = lapply(brody, check_convergence),
-    vonB_check = lapply(vonB, check_convergence),
-    log_check = lapply(log, check_convergence),
-    brody_details = lapply(brody, extract_model_details),
-    vonB_details = lapply(vonB, extract_model_details),
-    log_details = lapply(log, extract_model_details)
-  )
+    brody_check = list(check_convergence(brody)),
+    vonB_check = list(check_convergence(vonB)),
+    log_check = list(check_convergence(log)),
+    brody_coeff = list(extract_coefficients(brody)),
+    vonB_coeff = list(extract_coefficients(vonB)),
+    log_coeff = list(extract_coefficients(log))
+  ) %>%
+  unnest_wider(brody_check, names_sep = "_") %>%  # Flatten convergence details
+  unnest_wider(vonB_check, names_sep = "_") %>%
+  unnest_wider(log_check, names_sep = "_") %>%
+  unnest_longer(brody_coeff, values_to = "Brody_Param") %>% # Convert coefficients to rows
+  unnest_longer(vonB_coeff, values_to = "vonB_Param") %>%
+  unnest_longer(log_coeff, values_to = "Log_Param") %>%
+  ungroup()
 
-# View results
+# Print results
 print(convergence_results)
 ```
 
@@ -349,19 +346,4 @@ plots <- fits %>%
 for (plot_data in plots$brody_plot) print(plot_data)
 for (plot_data in plots$vonB_plot) print(plot_data)
 for (plot_data in plots$log_plot) print(plot_data)
-```
-
-
-### Task 6: Interpretation ###
-
-```{r}
-# Compare parameters and visualize outputs
-print("Parameter Estimates:")
-params %>% select(Breed_Group, brody_params, vonB_params, log_params) %>% print()
-
-print("Model Metrics:")
-model_metrics %>% select(Breed_Group, brody_metrics, vonB_metrics, log_metrics) %>% print()
-
-print("Model Comparison:")
-model_metrics %>% unnest(cols = c(brody_metrics, vonB_metrics, log_metrics)) %>% print()
 ```
