@@ -25,14 +25,14 @@ This project was conducted for the Department of Animal Breeding & Genetics at t
 -	Software: R, Excel
 -	Statistical Methods: AIC, BIC, R-squared
 
-```{r}
+```{r, include=FALSE, echo=FALSE}
 # Set CRAN mirror
 options(repos = c(CRAN = "https://cloud.r-project.org/"))
 ```
 
 ### Install and Load Packages ###
 
-```{r}
+```{r, include=FALSE}
 # Step 1 : Install necessary packages
 install.packages(c("minpack.lm", "tidyverse", "readxl"))
 ```
@@ -65,6 +65,16 @@ head(cattle_data)
 
 # Inspect data structure
 str(cattle_data)
+
+# Convert Breed_Group to a factor
+cattle_data$Breed_Group <- as.factor(cattle_data$Breed_Group)
+
+# Summarize breed types and their occurrences
+breed_summary <- cattle_data %>%
+  count(Breed_Group, name = "Occurrences")
+
+# Display the summary
+breed_summary
 ```
 
 **2. Data Quality Checks**
