@@ -376,38 +376,15 @@ The analysis provided insights for improved livestock management.</p>
 <li>Software: R, Excel</li>
 <li>Statistical Methods: AIC, BIC, R-squared</li>
 </ul>
-<pre class="r"><code># Set CRAN mirror
-options(repos = c(CRAN = &quot;https://cloud.r-project.org/&quot;))</code></pre>
 </div>
 <div id="install-and-load-packages" class="section level3">
 <h3>Install and Load Packages</h3>
-<pre class="r"><code># Step 1 : Install necessary packages
-install.packages(c(&quot;minpack.lm&quot;, &quot;tidyverse&quot;, &quot;readxl&quot;))</code></pre>
-<pre><code>## Warning: unable to access index for repository https://cloud.r-project.org/src/contrib:
-##   cannot open URL &#39;https://cloud.r-project.org/src/contrib/PACKAGES&#39;</code></pre>
-<pre><code>## Warning: packages &#39;minpack.lm&#39;, &#39;tidyverse&#39;, &#39;readxl&#39; are not available for this version of R
-## 
-## Versions of these packages for your version of R might be available elsewhere,
-## see the ideas at
-## https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages</code></pre>
-<pre class="r"><code># STEP 2 : Load necessary libraries
-library(nlme)
-library(minpack.lm)
-library(ggplot2)
-library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;dplyr&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:nlme&#39;:
-## 
-##     collapse</code></pre>
-<pre><code>## The following objects are masked from &#39;package:stats&#39;:
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(readxl)
-library(tidyr)</code></pre>
+<pre><code>## Warning: unable to access index for repository https://cloud.r-project.org/bin/windows/contrib/4.4:
+##   download from &#39;https://cloud.r-project.org/bin/windows/contrib/4.4/PACKAGES&#39; failed</code></pre>
+<pre><code>## Packages which are only available in source form, and may need
+##   compilation of C/C++/Fortran: &#39;minpack.lm&#39; &#39;readxl&#39;</code></pre>
+<pre><code>##   These will not be installed</code></pre>
+<pre><code>## installing the source package &#39;tidyverse&#39;</code></pre>
 </div>
 <div id="data-and-methodology" class="section level3">
 <h3>Data and Methodology</h3>
@@ -420,8 +397,8 @@ Classification into Holstein Friesian or F1 crossbred.</p>
 <pre class="r"><code># Load dataset
 cattle_data &lt;- read_excel(&quot;cattle_dataset.xlsx&quot;)
 
-# View the imported data
-head(cattle_data) </code></pre>
+# Display a preview of the dataset
+print(head(cattle_data))</code></pre>
 <pre><code>## # A tibble: 6 × 4
 ##      ID Age_Months Breed_Group Weight_Kg
 ##   &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;           &lt;dbl&gt;
@@ -431,13 +408,35 @@ head(cattle_data) </code></pre>
 ## 4     4        7   HYBRID          109. 
 ## 5     5        7.5 HYBRID          110. 
 ## 6     6        8   HYBRID          120.</code></pre>
-<pre class="r"><code># Inspect data structure
-str(cattle_data)</code></pre>
+<pre class="r"><code># Inspect the structure of the dataset
+cat(&quot;\nStructure of the Data:\n&quot;)</code></pre>
+<pre><code>## 
+## Structure of the Data:</code></pre>
+<pre class="r"><code>str(cattle_data)</code></pre>
 <pre><code>## tibble [79 × 4] (S3: tbl_df/tbl/data.frame)
 ##  $ ID         : num [1:79] 1 2 3 4 5 6 7 8 9 10 ...
 ##  $ Age_Months : num [1:79] 5.5 6 6.5 7 7.5 8 8.5 9 9.5 10 ...
 ##  $ Breed_Group: chr [1:79] &quot;HYBRID&quot; &quot;HYBRID&quot; &quot;HYBRID&quot; &quot;HYBRID&quot; ...
 ##  $ Weight_Kg  : num [1:79] 93.7 95.1 100 109.3 110.3 ...</code></pre>
+<pre class="r"><code># Summary statistics for each variable
+cat(&quot;\nSummary Statistics for Each Variable:\n&quot;)</code></pre>
+<pre><code>## 
+## Summary Statistics for Each Variable:</code></pre>
+<pre class="r"><code>print(summary(cattle_data))</code></pre>
+<pre><code>##        ID         Age_Months    Breed_Group          Weight_Kg     
+##  Min.   : 1.0   Min.   : 5.50   Length:79          Min.   : 93.73  
+##  1st Qu.:20.5   1st Qu.:10.50   Class :character   1st Qu.:157.26  
+##  Median :40.0   Median :15.50   Mode  :character   Median :220.02  
+##  Mean   :40.0   Mean   :15.40                      Mean   :213.43  
+##  3rd Qu.:59.5   3rd Qu.:20.25                      3rd Qu.:262.75  
+##  Max.   :79.0   Max.   :26.00                      Max.   :325.33</code></pre>
+<pre><code>## 
+## Summary of Breed Types and Their Occurrences:</code></pre>
+<pre><code>## # A tibble: 2 × 2
+##   Breed_Group Occurrences
+##   &lt;chr&gt;             &lt;int&gt;
+## 1 HYBRID               38
+## 2 PURE BREED           41</code></pre>
 <p><strong>2. Data Quality Checks</strong></p>
 <pre class="r"><code># Display any rows with non-finite values for diagnostic purposes
 non_finite_rows &lt;- cattle_data %&gt;%
@@ -477,18 +476,6 @@ cat(&quot;Outliers Detected (Age):\n&quot;)</code></pre>
 <pre><code>## Outliers Detected (Age):</code></pre>
 <pre class="r"><code>print(outliers_age)</code></pre>
 <pre><code>## integer(0)</code></pre>
-<p><strong>3. Statistical Summary of Dataset</strong></p>
-<pre class="r"><code># Summary statistics for each variable
-cat(&quot;Summary Statistics:\n&quot;)</code></pre>
-<pre><code>## Summary Statistics:</code></pre>
-<pre class="r"><code>print(summary(cattle_data))</code></pre>
-<pre><code>##        ID         Age_Months    Breed_Group          Weight_Kg     
-##  Min.   : 1.0   Min.   : 5.50   Length:79          Min.   : 93.73  
-##  1st Qu.:20.5   1st Qu.:10.50   Class :character   1st Qu.:157.26  
-##  Median :40.0   Median :15.50   Mode  :character   Median :220.02  
-##  Mean   :40.0   Mean   :15.40                      Mean   :213.43  
-##  3rd Qu.:59.5   3rd Qu.:20.25                      3rd Qu.:262.75  
-##  Max.   :79.0   Max.   :26.00                      Max.   :325.33</code></pre>
 </div>
 <div id="growth-curve-modeling" class="section level3">
 <h3>Growth Curve Modeling</h3>

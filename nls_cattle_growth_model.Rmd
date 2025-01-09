@@ -32,12 +32,12 @@ options(repos = c(CRAN = "https://cloud.r-project.org/"))
 
 ### Install and Load Packages ###
 
-```{r, include=FALSE}
+```{r, echo=FALSE, include=FALSE}
 # Step 1 : Install necessary packages
 install.packages(c("minpack.lm", "tidyverse", "readxl"))
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE, error=FALSE}
 # STEP 2 : Load necessary libraries
 library(nlme)
 library(minpack.lm)
@@ -60,22 +60,28 @@ The dataset used for this analysis was imported from an Excel file (Org_Dataset.
 # Load dataset
 cattle_data <- read_excel("cattle_dataset.xlsx")
 
-# View the imported data
-head(cattle_data) 
+# Display a preview of the dataset
+print(head(cattle_data))
+```
 
-# Inspect data structure
+```{r}
+# Inspect the structure of the dataset
+cat("\nStructure of the Data:\n")
 str(cattle_data)
 
-# Convert Breed_Group to a factor
-cattle_data$Breed_Group <- as.factor(cattle_data$Breed_Group)
+# Summary statistics for each variable
+cat("\nSummary Statistics for Each Variable:\n")
+print(summary(cattle_data))
+```
 
+```{r, echo=FALSE}
 # Summarize breed types and their occurrences
+cat("\nSummary of Breed Types and Their Occurrences:\n")
 breed_summary <- cattle_data %>%
   count(Breed_Group, name = "Occurrences")
-
-# Display the summary
-breed_summary
+print(breed_summary)
 ```
+
 
 **2. Data Quality Checks**
 
@@ -112,14 +118,6 @@ z_scores_age <- scale(cattle_data$Age_Months)
 outliers_age <- which(abs(z_scores_age) > 3)
 cat("Outliers Detected (Age):\n")
 print(outliers_age)
-```
-
-**3. Statistical Summary of Dataset**
-
-```{r}
-# Summary statistics for each variable
-cat("Summary Statistics:\n")
-print(summary(cattle_data))
 ```
 
 ### Growth Curve Modeling ###
